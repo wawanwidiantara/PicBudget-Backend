@@ -1,6 +1,6 @@
 # PicBudget
 
-**PicBudget** is a Django-based application designed to deploy an AI model that extracts key information from receipts, making personal finance management and expense tracking seamless. The app processes receipt images to extract essential details like merchant name, date, and total amount, then organizes this information for easy budget management and analysis.
+**PicBudget** is a Django-based & Flutter application designed to deploy an AI model that extracts key information from receipts, making personal finance management and expense tracking seamless. The app processes receipt images to extract essential details like merchant name, date, and total amount, then organizes this information for easy budget management and analysis.
 
 ## Features
 
