@@ -36,6 +36,9 @@
    ```bash
    make run-server
 
+## Version Information
+Version 1 of PicBudget's backend is available at [GitHub Repository: PicBudget v1](https://github.com/WawanWidiantara/PicBudget-Backend/tree/picbudget-be-v1).
+
 ## License
 This project is licensed under the MIT License.
 
