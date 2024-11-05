@@ -33,3 +33,12 @@ up-dependencies-only:
 
 .PHONY: update
 update: install migrate;
+
+.PHONY: startapp
+startapp:
+	@if [ -z "$(app)" ]; then \
+		echo "Error: app name not provided. Usage: make startapp app=<app_name>"; \
+	else \
+		mkdir -p picbudget/$(app); \
+		python -m picbudget.manage startapp $(app) picbudget/$(app); \
+	fi

@@ -15,6 +15,7 @@ CSRF_TRUSTED_ORIGINS: List[str] = []
 
 INTERNAL_IPS = [
     "127.0.0.1",
+    "localhost",
 ]
 
 
@@ -72,7 +73,7 @@ DATABASES = {
         "NAME": os.getenv("POSTGRES_DB"),
         "USER": os.getenv("POSTGRES_USER"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("POSTGRES_HOST"),
+        "HOST": "db",
         "PORT": os.getenv("POSTGRES_PORT"),
         "ATOMIC_REQUESTS": True,
         "CONN_MAX_AGE": 600,
@@ -86,7 +87,6 @@ DATABASES = {
 #         "NAME": "/home/wawanwidiantara/Code/py_code/PicBudget-Backend/db.sqlite3",
 #     }
 # }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -122,7 +122,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"  # type: ignore # noqa: F821
+
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"  # type: ignore # noqa: F821
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
