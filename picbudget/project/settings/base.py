@@ -15,7 +15,6 @@ CSRF_TRUSTED_ORIGINS: List[str] = []
 
 INTERNAL_IPS = [
     "127.0.0.1",
-    "localhost",
 ]
 
 
