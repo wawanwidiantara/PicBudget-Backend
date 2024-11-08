@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "rest_framework",
     # Apps
     "picbudget.accounts.apps.AccountsConfig",
+    "picbudget.memberships.apps.MembershipsConfig",
 ]
 
 MIDDLEWARE = [
