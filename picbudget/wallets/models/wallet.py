@@ -27,4 +27,4 @@ class Wallet(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.fullname} - {self.name}"
+        return f"{self.user.full_name} - {self.name}"
