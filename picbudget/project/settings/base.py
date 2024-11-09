@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     # Apps
     "picbudget.accounts.apps.AccountsConfig",
     "picbudget.memberships.apps.MembershipsConfig",
+    "picbudget.wallets.apps.WalletsConfig",
 ]
 
 MIDDLEWARE = [
