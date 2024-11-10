@@ -12,6 +12,11 @@ class User(AbstractBaseUser):
         ("other", "Other"),
     ]
 
+    USER_STATUS = [
+        ("verified", "Verified"),
+        ("unverified", "Unverified"),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     google_id = models.CharField(max_length=255, blank=True, null=True)
     apple_id = models.CharField(max_length=255, blank=True, null=True)
@@ -20,6 +25,8 @@ class User(AbstractBaseUser):
     age = models.PositiveIntegerField(blank=True, null=True)
     photo_url = models.URLField(max_length=255, blank=True, null=True)
     email = models.EmailField(max_length=255, unique=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    status = models.CharField(max_length=10, choices=USER_STATUS, default="unverified")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_admin = models.BooleanField(default=False)
