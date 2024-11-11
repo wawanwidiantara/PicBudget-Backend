@@ -11,6 +11,9 @@ from ..serializers.otp import (
     OTPSerializer,
     VerifyOTPSerializer,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RegisterViewSet(viewsets.ViewSet):
@@ -18,19 +21,19 @@ class RegisterViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["post"])
     def register(self, request):
-        serializer = RegisterSerializer(data=request.data)
         try:
+            serializer = RegisterSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
             return Response(
-                {"message": "User registered successfully. OTP sent to email."},
+                {"message": "User registered successfully."},
                 status=status.HTTP_201_CREATED,
             )
-        except ValidationError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            logger.error(f"Registration error: {str(e)}")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "An unexpected error occurred."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     @action(detail=False, methods=["post"])
