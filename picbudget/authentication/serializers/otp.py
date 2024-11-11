@@ -14,8 +14,6 @@ class OTPSerializer(serializers.Serializer):
     def create(self, validated_data):
         email = validated_data["email"]
         user = User.objects.get(email=email)
-
-        # Generate OTP
         otp_instance, _ = OTP.objects.get_or_create(user=user)
         otp_code = otp_instance.generate_otp()
         send_mail(

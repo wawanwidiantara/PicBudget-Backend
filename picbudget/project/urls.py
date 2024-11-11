@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import include, path
 
+import picbudget.accounts
+import picbudget.accounts.urls
 import picbudget.authentication.urls
 
 API_PREFIX = "api/"
@@ -12,6 +14,7 @@ API_PREFIX = "api/"
 urlpatterns = [
     path("admin/", admin.site.urls),
     path(API_PREFIX, include(picbudget.authentication.urls)),
+    path(API_PREFIX, include(picbudget.accounts.urls)),
 ]
 
 if settings.DEBUG:

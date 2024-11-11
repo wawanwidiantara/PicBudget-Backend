@@ -5,7 +5,7 @@ import random
 
 class OTP(models.Model):
     user = models.OneToOneField("accounts.User", on_delete=models.CASCADE)
-    otp = models.CharField(max_length=6, null=True, blank=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
     expired_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:
