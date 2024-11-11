@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from authentication.serializers import LoginSerializer
+from ..serializers.login import LoginSerializer
 from rest_framework.permissions import AllowAny
 
 

@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from picbudget.authentication.models import OTP
-from picbudget.authentication.utils import send_otp_email
 
 User = get_user_model()
 
@@ -13,11 +12,10 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         user = User.objects.filter(email=value).first()
-        if user:
-            if user.status == "verified":
-                raise ValidationError(
-                    "A user with this email already exists and is verified."
-                )
+        if user and user.status == "verified":
+            raise ValidationError(
+                "A user with this email already exists and is verified."
+            )
         return value
 
     def create(self, validated_data):
@@ -28,18 +26,10 @@ class RegisterSerializer(serializers.Serializer):
             user.set_password(password)
             user.status = "unverified"
             user.save()
-
-            # Generate OTP
-            otp_instance, _ = OTP.objects.get_or_create(user=user)
-            otp_code = otp_instance.generate_otp()
-
-            # Send OTP to email (pseudo-code, replace with actual email sending logic)
-            send_otp_email(user.email, otp_code)
-
         return user
 
 
-class RegisterPersonalDataSerializer(serializers.ModelSerializer):
+class PersonalDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["full_name", "gender", "age", "phone_number", "photo_url"]

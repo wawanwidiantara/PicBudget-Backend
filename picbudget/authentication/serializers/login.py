@@ -21,6 +21,12 @@ class LoginSerializer(serializers.Serializer):
             if not user:
                 msg = _("Unable to log in with provided credentials.")
                 raise serializers.ValidationError(msg, code="authorization")
+
+            if user.status != "verified":
+                msg = _(
+                    "User account is not verified. Please verify your account first."
+                )
+                raise serializers.ValidationError(msg, code="authorization")
         else:
             msg = _('Must include "email" and "password".')
             raise serializers.ValidationError(msg, code="authorization")
