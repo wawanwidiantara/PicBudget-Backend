@@ -12,16 +12,7 @@ migrations:
 
 .PHONY: run-celery
 run-celery:
-	poetry run celery -A thenewboston.project worker -l INFO
-
-.PHONY: docker-compose-down
-docker-compose-down:
-	cd; docker compose down
-
-.PHONY: deploy-cleanup
-deploy-cleanup:
-	docker image prune -f
-	docker builder prune -f
+	celery -A picbudget.project worker -l INFO
 
 .PHONY: run-server
 run-server:
@@ -65,6 +56,7 @@ setup:
 		for folder in models views serializers tests; do \
 			mkdir -p picbudget/$(app)/$$folder; \
 			touch picbudget/$(app)/$$folder/__init__.py; \
+			touch picbudget/$(app)/$$folder/serializers.py; \
 		done; \
 		if [ -f picbudget/$(app)/views.py ]; then \
 			mv picbudget/$(app)/views.py picbudget/$(app)/views/views.py; \
