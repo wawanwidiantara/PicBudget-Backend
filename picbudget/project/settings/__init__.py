@@ -20,6 +20,8 @@ include(
     'base.py',
     'logging.py',
     'custom.py',
+    'celery.py',
+    'rest_framework.py',
     optional(LOCAL_SETTINGS_PATH),
     'envvars.py',
     'docker.py',
