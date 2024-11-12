@@ -1,9 +1,12 @@
-from django.urls import path, include
-from django.contrib.auth import views as auth_views
+from django.urls import path
 from rest_framework.routers import SimpleRouter
 from .views.register import RegisterViewSet
 from .views.login import LoginViewSet
 from .views.otp import OTPViewSet
+from .views.reset_password import (
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
+)
 
 API_PREFIX = "auth"
 router = SimpleRouter(trailing_slash=False)
@@ -13,24 +16,14 @@ router.register(API_PREFIX, OTPViewSet, basename="otp")
 
 urlpatterns = [
     path(
-        f"{API_PREFIX}/reset-password",
-        auth_views.PasswordResetView.as_view(),
-        name="reset_password",
+        f"{API_PREFIX}/password-reset",
+        PasswordResetRequestView.as_view(),
+        name="password_reset",
     ),
     path(
-        f"{API_PREFIX}/reset-password-sent",
-        auth_views.PasswordResetDoneView.as_view(),
-        name="password_reset_done",
-    ),
-    path(
-        f"{API_PREFIX}/reset/<uidb64>/<token>",
-        auth_views.PasswordResetConfirmView.as_view(),
+        f"{API_PREFIX}/password-reset-confirm/<uidb64>/<token>",
+        PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
-    ),
-    path(
-        f"{API_PREFIX}/reset-password-complete",
-        auth_views.PasswordResetCompleteView.as_view(),
-        name="password_reset_complete",
     ),
 ]
 
