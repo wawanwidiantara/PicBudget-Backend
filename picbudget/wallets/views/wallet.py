@@ -1,11 +1,12 @@
 # views.py
 from rest_framework.views import APIView
-from django.db.models import Sum
+from django.db.models import Sum, Case, When, F
 from rest_framework import generics, permissions
 from ..models.wallet import Wallet
 from picbudget.transactions.models import Transaction
 from ..serializers.wallet import WalletSerializer
 from rest_framework.response import Response
+from django.db import models
 
 
 class WalletListCreateView(generics.ListCreateAPIView):
@@ -47,10 +48,18 @@ class TotalBalanceView(APIView):
             or 0
         )
         total_transaction_amount = (
-            Transaction.objects.filter(wallet__user=user).aggregate(Sum("amount"))[
-                "amount__sum"
-            ]
+            Transaction.objects.filter(wallet__user=user).aggregate(
+                total=Sum(
+                    Case(
+                        When(type="income", then=F("amount")),
+                        When(type="expense", then=-F("amount")),
+                        default=0,
+                        output_field=models.DecimalField(),
+                    )
+                )
+            )["total"]
             or 0
         )
-        total_balance = total_wallet_balance - total_transaction_amount
+
+        total_balance = total_wallet_balance + total_transaction_amount
         return Response({"data": {"total_balance": total_balance}})

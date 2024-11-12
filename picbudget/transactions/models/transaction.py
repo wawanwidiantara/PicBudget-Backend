@@ -7,7 +7,6 @@ class Transaction(models.Model):
     TRANSACTION_TYPE = [
         ("income", "Income"),
         ("expense", "Expense"),
-        ("transfer", "Transfer"),
     ]
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     wallet = models.ForeignKey("wallets.Wallet", on_delete=models.CASCADE)

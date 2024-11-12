@@ -10,6 +10,10 @@ migrate:
 migrations:
 	python -m picbudget.manage makemigrations
 
+.PHONY: run-celery
+run-celery:
+	celery -A picbudget.project worker -l INFO
+
 .PHONY: run-server
 run-server:
 	python -m picbudget.manage runserver
@@ -52,6 +56,7 @@ setup:
 		for folder in models views serializers tests; do \
 			mkdir -p picbudget/$(app)/$$folder; \
 			touch picbudget/$(app)/$$folder/__init__.py; \
+			touch picbudget/$(app)/$$folder/serializers.py; \
 		done; \
 		if [ -f picbudget/$(app)/views.py ]; then \
 			mv picbudget/$(app)/views.py picbudget/$(app)/views/views.py; \
