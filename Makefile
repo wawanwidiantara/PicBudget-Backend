@@ -10,6 +10,19 @@ migrate:
 migrations:
 	python -m picbudget.manage makemigrations
 
+.PHONY: run-celery
+run-celery:
+	poetry run celery -A thenewboston.project worker -l INFO
+
+.PHONY: docker-compose-down
+docker-compose-down:
+	cd; docker compose down
+
+.PHONY: deploy-cleanup
+deploy-cleanup:
+	docker image prune -f
+	docker builder prune -f
+
 .PHONY: run-server
 run-server:
 	python -m picbudget.manage runserver

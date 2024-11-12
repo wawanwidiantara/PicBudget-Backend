@@ -28,3 +28,7 @@ COPY scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Set up the celery worker
+COPY scripts/run-celery.sh ./
+RUN chmod a+x ./run-celery.sh
