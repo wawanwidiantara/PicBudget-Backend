@@ -9,19 +9,19 @@ from .views.reset_password import (
 )
 
 API_PREFIX = "auth"
-router = SimpleRouter(trailing_slash=False)
+router = SimpleRouter(trailing_slash=True)
 router.register(API_PREFIX, RegisterViewSet, basename="register")
 router.register(API_PREFIX, LoginViewSet, basename="login")
 router.register(API_PREFIX, OTPViewSet, basename="otp")
 
 urlpatterns = [
     path(
-        f"{API_PREFIX}/password-reset",
+        f"{API_PREFIX}/password-reset/",
         PasswordResetRequestView.as_view(),
         name="password_reset",
     ),
     path(
-        f"{API_PREFIX}/password-reset-confirm/<uidb64>/<token>",
+        f"{API_PREFIX}/password-reset-confirm/<uidb64>/<token>/",
         PasswordResetConfirmView.as_view(),
         name="password_reset_confirm",
     ),
