@@ -2,8 +2,7 @@ from rest_framework import serializers
 from picbudget.authentication.models import OTP
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
-from django.conf import settings
+from picbudget.project.task import send_email_task
 
 User = get_user_model()
 
@@ -16,12 +15,11 @@ class OTPSerializer(serializers.Serializer):
         user = User.objects.get(email=email)
         otp_instance, _ = OTP.objects.get_or_create(user=user)
         otp_code = otp_instance.generate_otp()
-        send_mail(
-            "Your OTP Code",
-            f"Your OTP code is {otp_code}. It will expire in 5 minutes.",
-            settings.EMAIL_HOST_USER,
-            [user.email],
-        )
+
+        subject = "Your OTP Code"
+        message = f"Your OTP code is {otp_code}. It will expire in 5 minutes."
+        recipient_list = [user.email]
+        send_email_task.delay(subject, message, recipient_list)
 
         return otp_instance
 
