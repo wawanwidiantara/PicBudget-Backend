@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
@@ -14,7 +13,7 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.utils.encoding import force_str
 from ..serializers.reset_password import PasswordResetSerializer
 from django.http import HttpResponse
-from django.conf import settings
+from picbudget.project.task import send_email_task
 
 User = get_user_model()
 
@@ -42,12 +41,11 @@ class PasswordResetRequestView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def send_reset_email(self, email, reset_link):
-        send_mail(
-            "Password Reset Request",
-            f"Click the link to reset your password: {reset_link}",
-            settings.EMAIL_HOST_USER,
-            [email],
-            fail_silently=False,
+        subject = "Password Reset Request"
+        message = f"Click the link to reset your password: {reset_link}"
+        recipient_list = [email]
+        send_email_task.delay(
+            subject=subject, message=message, recipient_list=recipient_list
         )
 
 
