@@ -34,11 +34,12 @@ INSTALLED_APPS = [
     "django_filters",
     # Apps
     "picbudget.accounts.apps.AccountsConfig",
+    "picbudget.authentication.apps.AuthenticationConfig",
     "picbudget.memberships.apps.MembershipsConfig",
     "picbudget.wallets.apps.WalletsConfig",
     "picbudget.labels.apps.LabelsConfig",
     "picbudget.transactions.apps.TransactionsConfig",
-    "picbudget.authentication.apps.AuthenticationConfig",
+    "picbudget.picscan.apps.PicscanConfig",
 ]
 
 MIDDLEWARE = [
@@ -74,10 +75,6 @@ WSGI_APPLICATION = "picbudget.project.wsgi.application"
 
 
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-
-# PostgreSQL
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
@@ -91,17 +88,7 @@ DATABASES = {
     }
 }
 
-# # SQLite
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": "/home/wawanwidiantara/Code/py_code/PicBudget-Backend/db.sqlite3",
-#     }
-# }
-
 # Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
 AUTH_USER_MODEL = "accounts.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -119,29 +106,22 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Email
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = os.getenv("EMAIL_PORT")
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"  # type: ignore # noqa: F821
 
@@ -149,6 +129,4 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"  # type: ignore # noqa: F821
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

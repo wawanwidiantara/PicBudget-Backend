@@ -37,6 +37,12 @@ class LoginSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = validated_data["user"]
         refresh = RefreshToken.for_user(user)
+        request = self.context.get("request")
+        photo_url = (
+            request.build_absolute_uri(user.get_photo_url())
+            if request
+            else user.get_photo_url()
+        )
 
         update_last_login(None, user)
 
@@ -47,7 +53,7 @@ class LoginSerializer(serializers.Serializer):
             "gender": user.gender,
             "age": user.age,
             "phone_number": user.phone_number,
-            "photo_url": user.photo_url,
+            "photo_url": photo_url,
         }
 
         return {

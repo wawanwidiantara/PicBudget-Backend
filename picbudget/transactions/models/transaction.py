@@ -17,6 +17,7 @@ class Transaction(models.Model):
     labels = models.ManyToManyField(
         "labels.Label", blank=True, related_name="transactions_labels"
     )
+    receipt = models.ImageField(upload_to="receipts", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -25,3 +26,8 @@ class Transaction(models.Model):
 
     def __str__(self):
         return self.wallet.user.full_name
+
+    def get_receipt_url(self):
+        if self.receipt and hasattr(self.receipt, "url"):
+            return self.receipt.url
+        return None
