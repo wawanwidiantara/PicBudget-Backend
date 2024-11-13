@@ -8,6 +8,11 @@ from rest_framework.permissions import AllowAny
 from PIL import Image
 import numpy as np
 import cv2
+from ..utils.processors import (
+    image_processing,
+    extract_text,
+)
+
 from paddleocr import PaddleOCR
 import logging
 
@@ -22,30 +27,29 @@ class ReceiptView(APIView):
         serializer = ReceiptSerializer(data=request.data)
         if serializer.is_valid():
             receipt = serializer.validated_data["receipt"]
-            # Read the image data once
             image_data = receipt.read()
-            image = cv2.cvtColor(
-                np.array(Image.open(ContentFile(image_data))), cv2.COLOR_RGB2GRAY
-            )
-            # Access PicscanConfig and retrieve the ocr instance
-            logger.info("OCR running")
-            paddle_ocr = PaddleOCR(
-                use_angle_cls=True,
-                use_tensorrt=True,
-                lang="id",
-                use_gpu=False,
-                show_log=False,
-            )
-            result = paddle_ocr.ocr(image, cls=True)
             path = default_storage.save(
                 "receipts/originals/" + receipt.name, ContentFile(image_data)
             )
+
+            # Image processing
+            logger.info("Image processing running")
+            image = cv2.cvtColor(
+                np.array(Image.open(ContentFile(image_data))), cv2.COLOR_RGB2GRAY
+            )
+            image_processor = image_processing.ImageProcessor(image)
+            image = image_processor.preprocess_image()
+
+            # OCR
+            logger.info("OCR running")
+            extract_text_processor = extract_text.TextExtractor(image)
+            extracted_text = extract_text_processor.extract_text()
+
             # return absolute path to the image
             url = request.build_absolute_uri(default_storage.url(path))
             return Response(
                 {
                     "path": url,
-                    "result": result,
                 },
                 status=status.HTTP_201_CREATED,
             )
