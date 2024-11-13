@@ -34,11 +34,12 @@ INSTALLED_APPS = [
     "django_filters",
     # Apps
     "picbudget.accounts.apps.AccountsConfig",
+    "picbudget.authentication.apps.AuthenticationConfig",
     "picbudget.memberships.apps.MembershipsConfig",
     "picbudget.wallets.apps.WalletsConfig",
     "picbudget.labels.apps.LabelsConfig",
     "picbudget.transactions.apps.TransactionsConfig",
-    "picbudget.authentication.apps.AuthenticationConfig",
+    "picbudget.picscan.apps.PicscanConfig",
 ]
 
 MIDDLEWARE = [
