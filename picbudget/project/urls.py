@@ -14,6 +14,7 @@ import picbudget.labels.urls
 API_PREFIX = "api/"
 
 urlpatterns = [
+    # django default homepage
     path("admin/", admin.site.urls),
     path(API_PREFIX, include(picbudget.authentication.urls)),
     path(API_PREFIX, include(picbudget.accounts.urls)),

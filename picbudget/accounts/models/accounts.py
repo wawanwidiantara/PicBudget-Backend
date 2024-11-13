@@ -23,7 +23,7 @@ class User(AbstractBaseUser):
     full_name = models.CharField(max_length=100)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="other")
     age = models.PositiveIntegerField(blank=True, null=True)
-    photo_url = models.URLField(max_length=255, blank=True, null=True)
+    photo_url = models.ImageField(upload_to="profile", blank=True, null=True)
     email = models.EmailField(max_length=255, unique=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     status = models.CharField(max_length=10, choices=USER_STATUS, default="unverified")
@@ -48,6 +48,11 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+
+    def get_photo_url(self):
+        if self.photo_url and hasattr(self.photo_url, "url"):
+            return self.photo_url.url
+        return None
 
     @property
     def is_staff(self):
