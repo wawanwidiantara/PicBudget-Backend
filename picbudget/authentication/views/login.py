@@ -10,7 +10,7 @@ class LoginViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["post"])
     def login(self, request):
-        serializer = LoginSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         response_data = serializer.save()
         return Response(response_data, status=status.HTTP_200_OK)
