@@ -4,7 +4,6 @@ from functools import lru_cache
 from typing import List, Dict, Optional, Tuple
 import numpy as np
 from keras.utils import pad_sequences
-from keras.models import load_model
 
 
 class ReceiptProcessor:
