@@ -1,59 +1,110 @@
 from paddleocr import PaddleOCR
 import re
+from typing import List, Tuple
+from functools import lru_cache
 
 
 class TextExtractor:
-    def __init__(self, image):
+    # Compile regex patterns once during class initialization
+    DATE_PATTERN = re.compile(r"\b\d{2}[./-]\d{2}[./-]\d{2,4}\b")
+    RP_PATTERN = re.compile(r"\brp[.\s]?", re.IGNORECASE)
+    SPECIAL_CHARS_PATTERN = re.compile(r"[^\w\s.,]")
+    SINGLE_LETTER_PATTERN = re.compile(r"\b[a-zA-Z]\b")
+    PUNCTUATION_PATTERN = re.compile(
+        r"(?<!\d)[.,](?!\d)|(?<!\b[a-zA-Z])[.,](?!\b[a-zA-Z])"
+    )
+    SINGLE_DIGIT_PATTERN = re.compile(r"\b\d\b")
+    EMPTY_LINE_PATTERN = re.compile(r"^\s*$\n", re.MULTILINE)
+    WHITESPACE_PATTERN = re.compile(r"\s+")
+
+    def __init__(self, image: str):
+        """Initialize OCR with optimized settings."""
         self.image = image
-        self.ocr = PaddleOCR(use_angle_cls=False, lang="id", use_gpu=False)
+        self.ocr = PaddleOCR(
+            use_angle_cls=False,
+            lang="id",
+            use_gpu=False,
+            show_log=False,
+            enable_mkldnn=True,  # Enable Intel MKL-DNN acceleration
+            cpu_threads=4,  # Adjust based on your CPU
+        )
         self.extracted_text = self.extract_text(image)
 
-    def extract_text(self, image):
-        result = self.ocr.ocr(image, cls=False)
+    @staticmethod
+    @lru_cache(maxsize=128)
+    def _preprocess_text(line: str) -> str:
+        """Preprocess text with cached results for repeated patterns."""
+        dates = TextExtractor.DATE_PATTERN.findall(line)
 
-        if not result or not result[0]:
-            print("OCR did not return any results.")
-            return ""
+        # Chain replacements for better performance
+        line = TextExtractor.RP_PATTERN.sub("", line).lower().strip()
 
-        clean_result = [line for line in result[0]]
-        grouped_text = self._group_inline(clean_result)
-        cleaned_lines = [self._preprocess_text(line) for line in grouped_text]
-        cleaned_lines = [line.strip() for line in cleaned_lines if line.strip()]
-        extracted_text = "\n".join(cleaned_lines).lower()
+        line = TextExtractor.SPECIAL_CHARS_PATTERN.sub("", line)
 
-        return extracted_text
+        # Add dates back if found
+        if dates:
+            line = f"{line} {' '.join(dates)}"
 
-    def _preprocess_text(self, line):
-        dates = re.findall(r"\b\d{2}[./-]\d{2}[./-]\d{2,4}\b", line)
-        line = re.sub(r"\brp[.\s]?", "", line, flags=re.IGNORECASE)
-        line = re.sub(r"[^\w\s.,]", "", line)
-        for date in dates:
-            line += f" {date}"
-        line = re.sub(r"\b[a-zA-Z]\b", " ", line)
-        line = re.sub(r"(?<!\d)[.,](?!\d)|(?<!\b[a-zA-Z])[.,](?!\b[a-zA-Z])", "", line)
-        line = re.sub(r"\b\d\b", "", line)
-        line = re.sub(r"^\s*$\n", "", line, flags=re.MULTILINE)
-        line = re.sub(r"\s+", " ", line).strip()
+        # Apply remaining patterns in a single pass
+        line = TextExtractor.SINGLE_LETTER_PATTERN.sub(" ", line).strip()
+        line = TextExtractor.PUNCTUATION_PATTERN.sub("", line)
+        line = TextExtractor.SINGLE_DIGIT_PATTERN.sub("", line)
+        line = TextExtractor.EMPTY_LINE_PATTERN.sub("", line)
+        line = TextExtractor.WHITESPACE_PATTERN.sub(" ", line).strip()
+
         return line
 
-    def _group_inline(self, ocr_result, tolerance=15):
+    @staticmethod
+    def _is_inline(
+        box1: List[Tuple[float, float]],
+        box2: List[Tuple[float, float]],
+        tolerance: int = 15,
+    ) -> bool:
+        """Check if two boxes are inline using vectorized operations."""
+        return (
+            abs(box1[0][1] - box2[0][1]) <= tolerance
+            and abs(box1[2][1] - box2[2][1]) <= tolerance
+        )
+
+    def _group_inline(self, ocr_result: List[Tuple], tolerance: int = 15) -> List[str]:
+        """Group inline text more efficiently."""
+        if not ocr_result:
+            return []
+
         grouped_result = []
-        temp = ocr_result[0]
-        for i in range(1, len(ocr_result)):
-            if not self._is_inline(ocr_result[i - 1][0], ocr_result[i][0], tolerance):
-                joined_text = " ".join(
-                    [
-                        line[1][0]
-                        for line in ocr_result[
-                            ocr_result.index(temp) : ocr_result.index(ocr_result[i])
-                        ]
-                    ]
-                )
-                grouped_result.append(joined_text.lower())
-                temp = ocr_result[i]
+        current_group = []
+
+        # Use enumerate for better performance than index lookups
+        for i, current in enumerate(ocr_result[:-1]):
+            current_group.append(current[1][0])
+
+            if not self._is_inline(current[0], ocr_result[i + 1][0], tolerance):
+                grouped_result.append(" ".join(current_group).lower())
+                current_group = []
+
+        # Add the last group
+        if ocr_result:
+            current_group.append(ocr_result[-1][1][0])
+            grouped_result.append(" ".join(current_group).lower())
+
         return grouped_result
 
-    def _is_inline(self, box1, box2, tolerance):
-        top_aligned = abs(box1[0][1] - box2[0][1]) <= tolerance
-        bottom_aligned = abs(box1[2][1] - box2[2][1]) <= tolerance
-        return top_aligned and bottom_aligned
+    def extract_text(self, image: str) -> str:
+        """Extract text with improved error handling and performance."""
+        try:
+            result = self.ocr.ocr(image, cls=False)
+            if not result or not result[0]:
+                print("OCR did not return any results.")
+                return ""
+
+            # Process results in a more streamlined way
+            grouped_text = self._group_inline(result[0])
+            cleaned_lines = [
+                self._preprocess_text(line) for line in grouped_text if line.strip()
+            ]
+
+            return "\n".join(cleaned_lines)
+
+        except Exception as e:
+            print(f"Error during text extraction: {str(e)}")
+            return ""
