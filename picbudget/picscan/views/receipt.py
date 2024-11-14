@@ -12,8 +12,9 @@ from picbudget.wallets.models.wallet import Wallet
 from picbudget.accounts.models.accounts import User
 
 from picbudget.transactions.serializers.transaction import TransactionSerializer
-from picbudget.transactions.serializers.details import TransactionItemSerializer
 
+import os
+from uuid import uuid4
 
 from django.apps import apps
 from PIL import Image
@@ -24,9 +25,6 @@ from ..utils.processors import (
     extract_text,
 )
 
-import os
-from paddleocr import PaddleOCR
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,89 +33,82 @@ logger = logging.getLogger(__name__)
 class ReceiptView(APIView):
     permission_classes = [AllowAny]
 
+    def _process_image(self, image_data):
+        image = cv2.cvtColor(
+            np.array(Image.open(ContentFile(image_data))), cv2.COLOR_RGB2BGR
+        )
+        return image_processing.ImageProcessor(image).preprocess_image()
+
+    def _save_transaction_details(self, transaction, items):
+        TransactionDetail.objects.bulk_create(
+            [
+                TransactionDetail(
+                    transaction=transaction,
+                    item_name=item["item_name"],
+                    item_price=item["item_price"],
+                )
+                for item in items
+            ]
+        )
+
     def post(self, request):
         serializer = ReceiptSerializer(data=request.data)
-        if serializer.is_valid():
-            receipt = serializer.validated_data["receipt"]
-            image_data = receipt.read()
-            path = default_storage.save(
-                "receipts/picscan/" + receipt.name, ContentFile(image_data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        receipt = serializer.validated_data["receipt"]
+        image_data = receipt.read()
+
+        # Save file with UUID
+        file_ext = os.path.splitext(receipt.name)[1]
+        path = default_storage.save(
+            f"receipts/picscan/{uuid4()}{file_ext}", ContentFile(image_data)
+        )
+        url = request.build_absolute_uri(default_storage.url(path))
+
+        # Process image and extract text
+        processed_image = self._process_image(image_data)
+        extracted_text = extract_text.TextExtractor(processed_image).extracted_text
+
+        # Process receipt
+        processor = apps.get_app_config("picscan").receipt_processor
+        result = processor.process_receipt(extracted_text)
+
+        if "user_id" not in request.data or "wallet_id" not in request.data:
+            return Response(
+                {"path": url, "result": result}, status=status.HTTP_201_CREATED
             )
 
-            # Image processing
-            logger.info("Image processing running")
-            image = cv2.cvtColor(
-                np.array(Image.open(ContentFile(image_data))), cv2.COLOR_RGB2BGR
+        # Create transaction
+        try:
+            user = User.objects.get(id=request.data["user_id"])
+            wallet = Wallet.objects.get(id=request.data["wallet_id"], user=user)
+
+            transaction = Transaction.objects.create(
+                wallet=wallet,
+                amount=result["total"],
+                transaction_date=result["date"],
+                location=result.get("location"),
+                receipt=path,
+                method="picscan",
+                status="unconfirmed",
             )
-            image_processor = image_processing.ImageProcessor(image)
-            image = image_processor.preprocess_image()
 
-            # OCR
-            logger.info("OCR running")
-            extract_text_processor = extract_text.TextExtractor(image)
-            extracted_text = extract_text_processor.extracted_text
+            self._save_transaction_details(transaction, result["items"])
 
-            # Model processing
-            logger.info("Model processing running")
-            processor = apps.get_app_config("picscan").receipt_processor
-            result = processor.process_receipt(extracted_text)
-            url = request.build_absolute_uri(default_storage.url(path))
+            data = TransactionSerializer(transaction).data
+            data["receipt"] = url
 
-            logger.info("Saving transaction")
-            # check if request data has user id and wallet id and save the transaction
-            if "user_id" in request.data and "wallet_id" in request.data:
-                user = User.objects.get(id=request.data["user_id"])
-                wallet = Wallet.objects.get(id=request.data["wallet_id"], user=user)
-                transaction = Transaction.objects.create(
-                    wallet=wallet,
-                    amount=result["total"],
-                    transaction_date=result["date"],
-                    # if location is not available, set it to None
-                    location=result.get("location", None),
-                    receipt=path,
-                    method="picscan",
-                    status="unconfirmed",
-                )
-                transaction.save()
+            return Response({"data": data}, status=status.HTTP_201_CREATED)
 
-                logger.info("Saving transaction details")
-                # result["items"] is a list of dictionaries, each dictionary contains the item details, save them to the database
-                for item in result["items"]:
-                    detail = TransactionDetail.objects.create(
-                        transaction=transaction,
-                        item_name=item["item_name"],
-                        item_price=item["item_price"],
-                    )
-                    detail.save()
-
-                transaction_serializer = TransactionSerializer(transaction)
-                details_serializer = TransactionItemSerializer(
-                    TransactionDetail.objects.filter(transaction=transaction), many=True
-                )
-
-                return Response(
-                    {
-                        "data": {
-                            "transaction": transaction_serializer.data,
-                            "items": details_serializer.data,
-                        }
-                    },
-                    status=status.HTTP_201_CREATED,
-                )
-            else:
-                return Response(
-                    {
-                        "path": url,
-                        "result": result,
-                    },
-                    status=status.HTTP_201_CREATED,
-                )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except (User.DoesNotExist, Wallet.DoesNotExist):
+            return Response(
+                {"error": "Invalid user_id or wallet_id"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
-# created a new view to change the status of the transaction to confirmed
 class ConfirmTransactionView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
         try:

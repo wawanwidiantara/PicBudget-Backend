@@ -9,7 +9,6 @@ from rest_framework.response import Response
 
 class TransactionListCreateView(generics.ListCreateAPIView):
     serializer_class = TransactionSerializer
-    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_class = TransactionFilter
 
@@ -30,7 +29,6 @@ class TransactionListCreateView(generics.ListCreateAPIView):
 
 class TransactionDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TransactionSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Transaction.objects.filter(wallet__user=self.request.user)
