@@ -149,10 +149,11 @@ class ReceiptProcessor:
                         date_obj = date_obj.replace(
                             year=current_century + date_obj.year
                         )
-                    return date_obj.strftime("%d/%m/%Y")
+                    # Return date in datetime format
+                    return date_obj
                 except ValueError:
                     continue
-        return datetime.now().strftime("%d/%m/%Y")
+        return datetime.now()
 
     def extract_items(
         self, text_lines: List[str], label_lines: List[List[str]], current_idx: int
@@ -188,7 +189,7 @@ class ReceiptProcessor:
                 break
 
         if price is not None:
-            return {"item": item_name, "price": price}
+            return {"item_name": item_name, "item_price": price}
         return None
 
     def process_receipt(self, text: str) -> Dict[str, any]:
