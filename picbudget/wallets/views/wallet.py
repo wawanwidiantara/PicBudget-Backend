@@ -11,7 +11,6 @@ from django.db import models
 
 class WalletListCreateView(generics.ListCreateAPIView):
     serializer_class = WalletSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Wallet.objects.filter(user=self.request.user)
@@ -27,7 +26,6 @@ class WalletListCreateView(generics.ListCreateAPIView):
 
 class WalletDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = WalletSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Wallet.objects.filter(user=self.request.user)
@@ -39,8 +37,6 @@ class WalletDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class TotalBalanceView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
     def get(self, request, *args, **kwargs):
         user = request.user
         total_wallet_balance = (
