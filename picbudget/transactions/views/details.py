@@ -4,12 +4,13 @@ from ..models.detail import TransactionDetail
 from ..serializers.details import TransactionItemSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
+from ..filters.detail import TransactionItemFilter
 
 
 class TransactionItemListCreateView(generics.ListCreateAPIView):
     serializer_class = TransactionItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
+    filterset_class = TransactionItemFilter
 
     def get_queryset(self):
         return TransactionDetail.objects.filter(
@@ -30,7 +31,6 @@ class TransactionItemListCreateView(generics.ListCreateAPIView):
 
 class TransactionItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TransactionItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return TransactionDetail.objects.filter(

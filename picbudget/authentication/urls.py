@@ -1,5 +1,6 @@
 from django.urls import path
 from rest_framework.routers import SimpleRouter
+from rest_framework_simplejwt.views import TokenRefreshView
 from .views.register import RegisterViewSet
 from .views.login import LoginViewSet
 from .views.otp import OTPViewSet
@@ -15,6 +16,11 @@ router.register(API_PREFIX, LoginViewSet, basename="login")
 router.register(API_PREFIX, OTPViewSet, basename="otp")
 
 urlpatterns = [
+    path(
+        f"{API_PREFIX}/login/refresh/",
+        TokenRefreshView.as_view(),
+        name="token_refresh",
+    ),
     path(
         f"{API_PREFIX}/password-reset/",
         PasswordResetRequestView.as_view(),

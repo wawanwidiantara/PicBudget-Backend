@@ -6,7 +6,6 @@ from rest_framework.response import Response
 
 class LabelListCreateView(generics.ListCreateAPIView):
     serializer_class = LabelSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Label.objects.all()
@@ -22,7 +21,6 @@ class LabelListCreateView(generics.ListCreateAPIView):
 
 class LabelDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LabelSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Label.objects.all()
