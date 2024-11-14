@@ -48,7 +48,7 @@ class TotalBalanceView(APIView):
             or 0
         )
         total_transaction_amount = (
-            Transaction.objects.filter(wallet__user=user).aggregate(
+            Transaction.objects.filter(wallet__user=user, status="confirmed").aggregate(
                 total=Sum(
                     Case(
                         When(type="income", then=F("amount")),
