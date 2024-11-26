@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "picbudget.labels.apps.LabelsConfig",
     "picbudget.transactions.apps.TransactionsConfig",
     "picbudget.picscan.apps.PicscanConfig",
+    "picbudget.picplan.apps.PicplanConfig",
 ]
 
 MIDDLEWARE = [
