@@ -11,6 +11,7 @@ import picbudget.wallets.urls
 import picbudget.transactions.urls
 import picbudget.labels.urls
 import picbudget.picscan.urls
+import picbudget.picscan.urls
 
 API_PREFIX = "api/"
 
@@ -22,6 +23,7 @@ urlpatterns = [
     path(API_PREFIX, include(picbudget.wallets.urls)),
     path(API_PREFIX, include(picbudget.labels.urls)),
     path(API_PREFIX, include(picbudget.transactions.urls)),
+    path(API_PREFIX, include(picbudget.picscan.urls)),
     path(API_PREFIX, include(picbudget.picscan.urls)),
 ]
 
