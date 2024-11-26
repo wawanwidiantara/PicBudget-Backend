@@ -16,11 +16,9 @@ class PlanViewSet(viewsets.ModelViewSet):
     serializer_class = PlanSerializer
 
     def get_queryset(self):
-        # Filter plans based on the logged-in user
         return Plan.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):
-        # Use different serializers for different actions
         if self.action in ["create", "update", "partial_update"]:
             return PlanCreateUpdateSerializer
         if self.action == "detail":
@@ -28,7 +26,6 @@ class PlanViewSet(viewsets.ModelViewSet):
         return PlanSerializer
 
     def perform_create(self, serializer):
-        # Ensure the plan is tied to the logged-in user
         serializer.save(user=self.request.user)
 
     @action(detail=True, methods=["get"])
@@ -43,7 +40,7 @@ class PlanViewSet(viewsets.ModelViewSet):
             user=request.user,
         ).distinct()
         serializer = TransactionSerializer(transactions, many=True)
-        return Response(serializer.data)
+        return Response({"data": serializer.data})
 
     @action(detail=True, methods=["get"])
     def detail(self, request, pk=None):
@@ -52,4 +49,4 @@ class PlanViewSet(viewsets.ModelViewSet):
         """
         plan = self.get_object()
         serializer = PlanDetailSerializer(plan)
-        return Response(serializer.data)
+        return Response({"data": serializer.data})

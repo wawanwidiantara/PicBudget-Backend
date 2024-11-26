@@ -1,9 +1,10 @@
 from rest_framework import serializers
-from django.db import models
+from django.db.models import Sum
 from picbudget.labels.serializers import LabelSerializer
 from picbudget.wallets.serializers import WalletSerializer
 from picbudget.picplan.models import Plan
 from picbudget.transactions.models import Transaction
+from datetime import timedelta
 
 
 class PlanSerializer(serializers.ModelSerializer):
@@ -74,8 +75,9 @@ class PlanDetailSerializer(serializers.ModelSerializer):
 
     def get_remaining(self, obj):
         """Calculate remaining budget."""
-        total_spent = obj.calculate_progress() * obj.amount / 100
-        return obj.amount - total_spent
+        progress = obj.calculate_progress()
+        total_spent = (progress / 100) * obj.amount if progress else 0
+        return round(obj.amount - total_spent, 2)
 
     def get_daily_average(self, obj):
         """Calculate daily average spending."""
@@ -85,29 +87,31 @@ class PlanDetailSerializer(serializers.ModelSerializer):
             user=obj.user,
             transaction_date__month=obj.created_at.month,
         )
-        total_spent = transactions.aggregate(total=models.Sum("amount"))["total"] or 0
-        return total_spent / obj.created_at.day
+        total_spent = transactions.aggregate(total=Sum("amount"))["total"] or 0
+        current_day = obj.created_at.day
+        if current_day > 0:
+            return round(total_spent / current_day, 2)
+        return 0
 
     def get_daily_recommended(self, obj):
         """Calculate recommended daily spending."""
-        now = obj.created_at.day
-        days_in_month = 30  # Adjust for actual days in the month
-        return obj.amount / days_in_month
+        days_in_month = obj.created_at.days_in_month  # Handles varying days in a month
+        if days_in_month > 0:
+            return round(obj.amount / days_in_month, 2)
+        return 0
 
     def get_last_periods(self, obj):
         """Generate data for the bar chart of last periods."""
         periods = []
         for month_offset in range(1, 5):  # Adjust the range as needed
-            previous_month = obj.created_at.month - month_offset
+            previous_month = (obj.created_at - timedelta(days=month_offset * 30)).month
             transactions = Transaction.objects.filter(
                 wallet__in=obj.wallets.all(),
                 labels__in=obj.labels.all(),
                 user=obj.user,
                 transaction_date__month=previous_month,
             )
-            total_spent = (
-                transactions.aggregate(total=models.Sum("amount"))["total"] or 0
-            )
+            total_spent = transactions.aggregate(total=Sum("amount"))["total"] or 0
             periods.append(
                 {
                     "month": previous_month,
@@ -128,8 +132,6 @@ class PlanDetailSerializer(serializers.ModelSerializer):
                 user=obj.user,
                 transaction_date__month=obj.created_at.month,
             )
-            total_spent = (
-                transactions.aggregate(total=models.Sum("amount"))["total"] or 0
-            )
-            data.append({"label": label.name, "spent": total_spent})
+            total_spent = transactions.aggregate(total=Sum("amount"))["total"] or 0
+            data.append({"label": label.name, "spent": round(total_spent, 2)})
         return data
