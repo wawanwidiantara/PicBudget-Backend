@@ -57,19 +57,18 @@ class Plan(models.Model):
         elif self.period == "yearly":
             start_date = now_date.replace(month=1, day=1)
             end_date = now_date.replace(month=12, day=31)
-        else:  # One-time or custom
+        else:
             start_date, end_date = None, None
 
-        # Fetch relevant transactions
         transactions = Transaction.objects.filter(
-            wallet__in=self.wallets.all(), labels__in=self.labels.all(), user=self.user
+            wallet__in=self.wallets.all(),
+            labels__in=self.labels.all(),
         )
         if start_date and end_date:
             transactions = transactions.filter(
                 transaction_date__range=(start_date, end_date)
             )
 
-        # Calculate total spending for the plan
         total_spent = (
             transactions.aggregate(total_spent=Sum("amount"))["total_spent"] or 0
         )
