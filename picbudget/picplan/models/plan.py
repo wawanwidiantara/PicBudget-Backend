@@ -12,6 +12,7 @@ class Plan(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     period = models.CharField(max_length=10, choices=PERIOD_TYPE, default="monthly")
@@ -25,11 +26,12 @@ class Plan(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-            user = kwargs.pop("user", None)
-            if user:
-                self.save_base(*args, **kwargs)
-                self.labels.set(Label.objects.all())
-                self.wallets.set(user.wallets.all())
-        else:
-            super().save(*args, **kwargs)
+
+        super().save(*args, **kwargs)
+
+        if not self.wallets.exists():
+            user_wallets = self.user.wallets.all()
+            self.wallets.set(user_wallets)
+
+        if not self.labels.exists():
+            self.labels.set(Label.objects.all())
