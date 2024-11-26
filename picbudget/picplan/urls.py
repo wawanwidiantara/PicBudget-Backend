@@ -24,9 +24,4 @@ urlpatterns = [
         PlanViewSet.as_view({"get": "transactions"}),
         name="plan-transactions",
     ),
-    path(
-        "plans/<uuid:pk>/detail/",
-        PlanViewSet.as_view({"get": "detail"}),
-        name="plan-detail-view",
-    ),
 ]

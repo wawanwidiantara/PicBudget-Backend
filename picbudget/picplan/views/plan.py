@@ -2,12 +2,14 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from ..serializers import (
+from ..serializers.plan import (
     PlanSerializer,
-    PlanCreateUpdateSerializer,
+    PlanListSerializer,
     PlanDetailSerializer,
 )
-from ..models import Plan
+from ..models.plan import Plan
+from picbudget.transactions.models import Transaction
+from picbudget.transactions.serializers.transaction import TransactionSerializer
 
 
 # Create your views here.
@@ -18,15 +20,25 @@ class PlanViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Plan.objects.filter(user=self.request.user)
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
     def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
-            return PlanCreateUpdateSerializer
-        if self.action == "detail":
+        if self.action == "list":
+            return PlanListSerializer
+        elif self.action in ["detail", "retrieve"]:
             return PlanDetailSerializer
         return PlanSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"data": serializer.data})
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response({"data": serializer.data})
 
     @action(detail=True, methods=["get"])
     def transactions(self, request, pk=None):
@@ -37,16 +49,6 @@ class PlanViewSet(viewsets.ModelViewSet):
         transactions = Transaction.objects.filter(
             wallet__in=plan.wallets.all(),
             labels__in=plan.labels.all(),
-            user=request.user,
         ).distinct()
         serializer = TransactionSerializer(transactions, many=True)
-        return Response({"data": serializer.data})
-
-    @action(detail=True, methods=["get"])
-    def detail(self, request, pk=None):
-        """
-        Retrieve a detailed view of the plan, including progress, trends, and spending analysis.
-        """
-        plan = self.get_object()
-        serializer = PlanDetailSerializer(plan)
         return Response({"data": serializer.data})
