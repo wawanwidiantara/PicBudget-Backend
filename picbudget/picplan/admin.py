@@ -12,6 +12,10 @@ class PlanAdmin(admin.ModelAdmin):
     ]
     search_fields = ["name"]
     list_filter = ["created_at", "updated_at"]
+    filter_horizontal = (
+        "labels",
+        "wallets",
+    )
 
     class Meta:
         model = Plan
