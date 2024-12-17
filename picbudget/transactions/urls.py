@@ -2,6 +2,8 @@ from django.urls import path
 from .views.transaction import (
     TransactionListCreateView,
     TransactionDetailView,
+    TransactionSummaryView,
+    TransactionByLabelSummaryView,
 )
 from .views.details import (
     TransactionItemListCreateView,
@@ -24,5 +26,16 @@ urlpatterns = [
         "transaction-items/<uuid:pk>/",
         TransactionItemDetailView.as_view(),
         name="transaction-item-detail",
+    ),
+    path(
+        "transactions/summary/",
+        TransactionSummaryView.as_view(),
+        name="transaction-summary",
+    ),
+    # New endpoint for totals based on labels
+    path(
+        "transactions/summary/labels/",
+        TransactionByLabelSummaryView.as_view(),
+        name="transaction-summary-labels",
     ),
 ]
