@@ -80,22 +80,18 @@ class TransactionSummaryView(APIView):
             "total_month": total_month,
             "total_all": total_all,
         }
-
         return Response({"data": response_data})
 
 
 class TransactionByLabelSummaryView(APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
-
         transactions = Transaction.objects.filter(wallet__user=user)
-
         totals_by_label = (
             transactions.values("labels__name")
             .annotate(total_amount=Sum("amount"))
             .order_by("labels__name")
         )
-
         response_data = [
             {
                 "label": entry["labels__name"] or "Unlabeled",
@@ -103,5 +99,4 @@ class TransactionByLabelSummaryView(APIView):
             }
             for entry in totals_by_label
         ]
-
         return Response({"data": response_data})
