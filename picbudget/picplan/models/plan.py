@@ -6,6 +6,7 @@ from picbudget.labels.models import Label
 from picbudget.wallets.models import Wallet
 from picbudget.transactions.models import Transaction
 from uuid import uuid4
+from dateutil.relativedelta import relativedelta
 
 
 class Plan(models.Model):
@@ -48,17 +49,13 @@ class Plan(models.Model):
 
         if self.period == "monthly":
             start_date = now_date.replace(day=1)
-            end_date = start_date.replace(
-                month=start_date.month + 1, day=1
-            ) - timedelta(days=1)
+            end_date = start_date + relativedelta(months=1) - timedelta(days=1)
         elif self.period == "weekly":
             start_date = now_date - timedelta(days=now_date.weekday())
             end_date = start_date + timedelta(days=6)
         elif self.period == "yearly":
             start_date = now_date.replace(month=1, day=1)
             end_date = now_date.replace(month=12, day=31)
-        else:
-            start_date, end_date = None, None
 
         transactions = Transaction.objects.filter(
             wallet__in=self.wallets.all(),
