@@ -28,7 +28,7 @@ services:
     volumes:
       - ./media:/opt/project/media
     environment:
-      PICBUDGET_SETTINGS_LOCAL_SETTINGS_PATH: 'local/settings.prod.py'
+      PICBUDGET_SETTING_LOCAL_SETTINGS_PATH: 'local/settings.prod.py'
 
   celery:
     build: .
