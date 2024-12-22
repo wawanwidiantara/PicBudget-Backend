@@ -25,6 +25,8 @@ services:
       - redis
     env_file:
       - .env
+    volumes:
+      - ./media:/opt/project/media
     environment:
       PICBUDGET_SETTINGS_LOCAL_SETTINGS_PATH: 'local/settings.prod.py'
 
