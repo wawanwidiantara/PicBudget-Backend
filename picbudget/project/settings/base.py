@@ -6,12 +6,14 @@ from typing import List
 load_dotenv()
 
 DEBUG = False
-SECRET_KEY = NotImplemented
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-#_@z!')
 
 ALLOWED_HOSTS: List[str] = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS: List[str] = []
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS', 'http://localhost:1337').split(' ')
 
+SECURE_SSL_REDIRECT = False
 
 INTERNAL_IPS = [
     "127.0.0.1",
@@ -118,7 +120,7 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Jakarta"
 USE_I18N = True
 USE_TZ = True
 
