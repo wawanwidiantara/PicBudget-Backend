@@ -10,4 +10,4 @@ $RUN_MANAGE_PY collectstatic --no-input
 echo 'Running migrations...'
 $RUN_MANAGE_PY migrate --no-input
 
-exec daphne -u /tmp/daphne.sock picbudget.project.asgi:application --port 8000 --bind 0.0.0.0
+exec daphne picbudget.project.asgi:application --port 8000 --bind 0.0.0.0
