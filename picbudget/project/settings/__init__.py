@@ -3,12 +3,11 @@ from pathlib import Path
 
 from split_settings.tools import optional, include
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-
 ENVVAR_SETTINGS_PREFIX = "PICBUDGET_SETTING_"
-
 LOCAL_SETTINGS_PATH = os.getenv(f"{ENVVAR_SETTINGS_PREFIX}LOCAL_SETTINGS_PATH")
+
+
 if not LOCAL_SETTINGS_PATH:
     LOCAL_SETTINGS_PATH = "local/settings.dev.py"
 

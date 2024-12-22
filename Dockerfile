@@ -32,7 +32,3 @@ RUN chmod +x ./run-celery.sh
 
 COPY picbudget picbudget
 COPY local local
-
-# # Add a health check (optional, for container monitoring)
-# HEALTHCHECK --interval=30s --timeout=10s \
-#   CMD curl -f http://localhost:8000/health/ || exit 1
