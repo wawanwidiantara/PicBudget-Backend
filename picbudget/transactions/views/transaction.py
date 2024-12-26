@@ -52,7 +52,7 @@ class TransactionSummaryView(APIView):
         transactions = Transaction.objects.filter(wallet__user=user)
 
         total_today = (
-            transactions.filter(transaction_date__date=now.date()).aggregate(
+            transactions.filter(transaction_date__date=now.date(), status="confirmed").aggregate(
                 total=Sum("amount")
             )["total"]
             or 0
@@ -60,19 +60,19 @@ class TransactionSummaryView(APIView):
 
         total_week = (
             transactions.filter(
-                transaction_date__gte=now - timedelta(days=7)
+                transaction_date__gte=now - timedelta(days=7), status="confirmed"
             ).aggregate(total=Sum("amount"))["total"]
             or 0
         )
 
         total_month = (
             transactions.filter(
-                transaction_date__gte=now - timedelta(days=30)
+                transaction_date__gte=now - timedelta(days=30), status="confirmed"
             ).aggregate(total=Sum("amount"))["total"]
             or 0
         )
 
-        total_all = transactions.aggregate(total=Sum("amount"))["total"] or 0
+        total_all = transactions.filter(status="confirmed").aggregate(total=Sum("amount"))["total"] or 0
 
         response_data = {
             "total_today": total_today,
