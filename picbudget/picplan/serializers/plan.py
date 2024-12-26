@@ -36,27 +36,36 @@ class PlanSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Amount must be greater than zero.")
         return value
 
+
 class PlanListSerializer(serializers.ModelSerializer):
     progress = serializers.SerializerMethodField()
+    remaining = serializers.SerializerMethodField()
     is_overspent = serializers.SerializerMethodField()
 
     class Meta:
         model = Plan
-        fields = ["id", "name", "amount", "progress", "is_overspent"]
+        fields = ["id", "name", "remaining", "progress", "is_overspent"]
 
     def get_progress(self, obj):
         return obj.calculate_progress()
 
+    def get_remaining(self, obj):
+        progress = obj.calculate_progress()
+        total_spent = (progress / 100) * obj.amount if progress else 0
+        return round(obj.amount - total_spent, 2)
+
     def get_is_overspent(self, obj):
         return obj.is_overspent()
 
+
 class PlanDetailSerializer(serializers.ModelSerializer):
     progress = serializers.SerializerMethodField()
-    remaining = serializers.SerializerMethodField()
+    spent = serializers.SerializerMethodField()
     daily_average = serializers.SerializerMethodField()
     daily_recommended = serializers.SerializerMethodField()
     last_periods = serializers.SerializerMethodField()
     spending_by_labels = serializers.SerializerMethodField()
+    is_overspent = serializers.SerializerMethodField()
 
     class Meta:
         model = Plan
@@ -66,8 +75,9 @@ class PlanDetailSerializer(serializers.ModelSerializer):
             "amount",
             "period",
             "notify_overspent",
+            "is_overspent",
             "progress",
-            "remaining",
+            "spent",
             "daily_average",
             "daily_recommended",
             "last_periods",
@@ -76,13 +86,16 @@ class PlanDetailSerializer(serializers.ModelSerializer):
             "wallets",
         ]
 
+    def get_is_overspent(self, obj):
+        return obj.is_overspent()
+
     def get_progress(self, obj):
         return obj.calculate_progress()
 
-    def get_remaining(self, obj):
+    def get_spent(self, obj):
         progress = obj.calculate_progress()
         total_spent = (progress / 100) * obj.amount if progress else 0
-        return round(obj.amount - total_spent, 2)
+        return round(total_spent, 2)
 
     def get_daily_average(self, obj):
         transactions = Transaction.objects.filter(
@@ -99,11 +112,16 @@ class PlanDetailSerializer(serializers.ModelSerializer):
     def get_daily_recommended(self, obj):
         year = obj.created_at.year
         month = obj.created_at.month
-        days_in_month = calendar.monthrange(year, month)[1]  # Get the number of days in the month
+        days_in_month = calendar.monthrange(year, month)[1]
 
-        if days_in_month > 0:
-            return round(obj.amount / days_in_month, 2)
-        return 0
+        progress = obj.calculate_progress()
+        total_spent = (progress / 100) * obj.amount if progress else 0
+        remaining = obj.amount - total_spent
+
+        if remaining > 0 and days_in_month > 0:
+            return round(remaining / days_in_month, 2)
+        else:
+            return 0
 
     def get_last_periods(self, obj):
         periods = []
