@@ -5,6 +5,8 @@ from picbudget.wallets.serializers.wallet import WalletSerializer
 from picbudget.picplan.models import Plan
 from picbudget.transactions.models import Transaction
 from datetime import timedelta
+from django.utils.timezone import now
+import math
 import calendar
 
 
@@ -66,6 +68,7 @@ class PlanDetailSerializer(serializers.ModelSerializer):
     last_periods = serializers.SerializerMethodField()
     spending_by_labels = serializers.SerializerMethodField()
     is_overspent = serializers.SerializerMethodField()
+    picplan_chart = serializers.SerializerMethodField()
 
     class Meta:
         model = Plan
@@ -84,6 +87,7 @@ class PlanDetailSerializer(serializers.ModelSerializer):
             "spending_by_labels",
             "labels",
             "wallets",
+            "picplan_chart",
         ]
 
     def get_is_overspent(self, obj):
@@ -94,7 +98,7 @@ class PlanDetailSerializer(serializers.ModelSerializer):
 
     def get_spent(self, obj):
         progress = obj.calculate_progress()
-        total_spent = (progress / 100) * obj.amount if progress else 0
+        total_spent = (progress / 100) * obj.amount if progress else 0.0
         return round(total_spent, 2)
 
     def get_daily_average(self, obj):
@@ -125,7 +129,7 @@ class PlanDetailSerializer(serializers.ModelSerializer):
 
     def get_last_periods(self, obj):
         periods = []
-        for month_offset in range(1, 5):  # Adjust the range as needed
+        for month_offset in range(1, 5):
             previous_month = (obj.created_at - timedelta(days=month_offset * 30)).month
             transactions = Transaction.objects.filter(
                 wallet__in=obj.wallets.all(),
@@ -154,3 +158,49 @@ class PlanDetailSerializer(serializers.ModelSerializer):
             total_spent = transactions.aggregate(total=Sum("amount"))["total"] or 0
             data.append({"label": label.name, "spent": round(total_spent, 2)})
         return data
+
+    def get_picplan_chart(self, obj):
+        current_datetime = now()
+        now_date = current_datetime.date()
+        year = now_date.year
+        month = now_date.month
+
+        # Get the number of days in the current month
+        days_in_month = calendar.monthrange(year, month)[1]
+
+        # Initialize data containers
+        before_limit_data = []
+        after_limit_data = []
+        cumulative_total = 0
+        limit = obj.amount
+        limit_reached = False
+
+        for day in range(1, now_date.day + 1):
+            daily_total = (
+                Transaction.objects.filter(
+                    wallet__in=obj.wallets.all(),
+                    labels__in=obj.labels.all(),
+                    transaction_date__year=year,
+                    transaction_date__month=month,
+                    transaction_date__day=day,
+                    status="confirmed",
+                ).aggregate(total=Sum("amount"))["total"]
+                or 0
+            )
+
+            cumulative_total += daily_total
+
+            if cumulative_total <= limit:
+                before_limit_data.append((day, cumulative_total))
+            else:
+                if not limit_reached:
+                    before_limit_data.append((day, limit))
+                    after_limit_data.append((day, cumulative_total - limit))
+                    limit_reached = True
+                else:
+                    after_limit_data.append((day, cumulative_total - limit))
+
+        return {
+            "before_limit": before_limit_data,
+            "after_limit": after_limit_data,
+        }
