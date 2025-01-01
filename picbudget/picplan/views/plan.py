@@ -11,7 +11,6 @@ from ..models.plan import Plan
 from picbudget.transactions.models import Transaction
 from picbudget.transactions.serializers.transaction import TransactionSerializer
 
-
 # Create your views here.
 class PlanViewSet(viewsets.ModelViewSet):
     queryset = Plan.objects.all()
@@ -21,14 +20,10 @@ class PlanViewSet(viewsets.ModelViewSet):
         return Plan.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        data = self.request.data
-        skip_wallets_check = "wallets" in data and len(data["wallets"]) > 0
-        skip_labels_check = "labels" in data and len(data["labels"]) > 0
-        serializer.save(
-            user=self.request.user,
-            skip_wallets_check=skip_wallets_check,
-            skip_labels_check=skip_labels_check,
-        )
+        try:
+            serializer.save(user=self.request.user)
+        except Exception as e:
+            return Response({"error": "An unexpected error occurred."}, status=500)
 
     def get_serializer_class(self):
         if self.action == "list":

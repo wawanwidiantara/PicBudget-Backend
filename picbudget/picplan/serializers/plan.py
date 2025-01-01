@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.db.models import Sum
 from picbudget.labels.serializers.label import LabelSerializer
 from picbudget.wallets.serializers.wallet import WalletSerializer
+from picbudget.labels.models import Label
+from picbudget.wallets.models import Wallet
 from picbudget.picplan.models import Plan
 from picbudget.transactions.models import Transaction
 from datetime import timedelta
@@ -11,8 +13,8 @@ import calendar
 
 
 class PlanSerializer(serializers.ModelSerializer):
-    labels = LabelSerializer(many=True)
-    wallets = WalletSerializer(many=True)
+    labels = serializers.ListField(write_only=True, required=False)
+    wallets = serializers.ListField(write_only=True, required=False)
     progress = serializers.SerializerMethodField()
     is_overspent = serializers.SerializerMethodField()
 
@@ -37,6 +39,56 @@ class PlanSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError("Amount must be greater than zero.")
         return value
+
+    def validate_labels(self, value):
+        """
+        Validate that all provided labels exist.
+        """
+        if not value:
+            return []
+        labels = Label.objects.filter(id__in=value)
+        if len(labels) != len(value):
+            raise serializers.ValidationError("One or more label IDs are invalid.")
+        return labels
+
+    def validate_wallets(self, value):
+        """
+        Validate that all provided wallets exist.
+        """
+        if not value:
+            return []
+        wallets = Wallet.objects.filter(id__in=value)
+        if len(wallets) != len(value):
+            raise serializers.ValidationError("One or more wallet IDs are invalid.")
+        return wallets
+
+    def create(self, validated_data):
+        """
+        Handle the creation of the Plan with specific wallets and labels.
+        """
+        labels = validated_data.pop("labels", [])
+        wallets = validated_data.pop("wallets", [])
+
+        plan = Plan.objects.create(**validated_data)
+        if labels:
+            plan.labels.set(labels)
+        if wallets:
+            plan.wallets.set(wallets)
+        return plan
+
+    def update(self, instance, validated_data):
+        """
+        Handle updates for the Plan with specific wallets and labels.
+        """
+        labels = validated_data.pop("labels", [])
+        wallets = validated_data.pop("wallets", [])
+
+        instance = super().update(instance, validated_data)
+        if labels:
+            instance.labels.set(labels)
+        if wallets:
+            instance.wallets.set(wallets)
+        return instance
 
 
 class PlanListSerializer(serializers.ModelSerializer):
