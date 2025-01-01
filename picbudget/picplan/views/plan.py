@@ -21,7 +21,14 @@ class PlanViewSet(viewsets.ModelViewSet):
         return Plan.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        data = self.request.data
+        skip_wallets_check = "wallets" in data and len(data["wallets"]) > 0
+        skip_labels_check = "labels" in data and len(data["labels"]) > 0
+        serializer.save(
+            user=self.request.user,
+            skip_wallets_check=skip_wallets_check,
+            skip_labels_check=skip_labels_check,
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
