@@ -11,8 +11,8 @@ import calendar
 
 
 class PlanSerializer(serializers.ModelSerializer):
-    labels = LabelSerializer(many=True, read_only=True)
-    wallets = WalletSerializer(many=True, read_only=True)
+    labels = LabelSerializer(many=True)
+    wallets = WalletSerializer(many=True)
     progress = serializers.SerializerMethodField()
     is_overspent = serializers.SerializerMethodField()
 
