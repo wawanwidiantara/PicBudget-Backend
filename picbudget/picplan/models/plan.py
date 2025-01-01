@@ -34,14 +34,13 @@ class Plan(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if not self.wallets.exists() and not kwargs.get("skip_wallets_check", False):
+
+        if not self.wallets.exists():
             user_wallets = Wallet.objects.filter(user=self.user)
             self.wallets.set(user_wallets)
 
-        if not self.labels.exists() and not kwargs.get("skip_labels_check", False):
-            all_labels = Label.objects.all()
-            self.labels.set(all_labels)
-
+        if not self.labels.exists():
+            self.labels.set(Label.objects.all())
 
     def calculate_progress(self):
         now_date = now().date()
