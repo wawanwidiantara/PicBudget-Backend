@@ -20,7 +20,7 @@ class Plan(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(decimal_places=2)
     period = models.CharField(max_length=10, choices=PERIOD_TYPE, default="monthly")
     labels = models.ManyToManyField(
         "labels.Label", blank=True, related_name="plans_labels"

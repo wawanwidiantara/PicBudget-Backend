@@ -13,7 +13,7 @@ class Wallet(models.Model):
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
     name = models.CharField(max_length=50, blank=False, null=False, default="My Wallet")
     type = models.CharField(max_length=10, choices=WALLET_TYPE, default="cash")
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    balance = models.DecimalField(decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
