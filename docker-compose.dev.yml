@@ -16,12 +16,9 @@ services:
       - redis_data:/data
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     restart: unless-stopped
-    command:
-      - ./run-django.sh
+    command: ./scripts/run-django.sh
     ports:
       - "8000:8000"
     depends_on:
@@ -30,23 +27,24 @@ services:
     env_file:
       - .env
     volumes:
-      - .:/opt/project  # Bind mount the whole project for live changes
-      - /var/www/media:/opt/project/media  # Keep media volume separate
+      - .:/opt/project
+      - ./media:/opt/project/media
     environment:
+      DEBUG: "True"
       PICBUDGET_SETTING_LOCAL_SETTINGS_PATH: 'local/settings.dev.py'
 
   celery:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: ./run-celery.sh
+    build: .
+    command: ./scripts/run-celery.sh
     depends_on:
       - redis
       - db
     env_file:
       - .env
     volumes:
-      - .:/opt/project  # Bind mount the code for live changes
+      - .:/opt/project
+    environment:
+      DEBUG: "True"   # Bind mount the code for live changes
 
 volumes:
   postgresql_data:

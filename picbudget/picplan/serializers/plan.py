@@ -8,7 +8,6 @@ from picbudget.picplan.models import Plan
 from picbudget.transactions.models import Transaction
 from datetime import timedelta
 from django.utils.timezone import now
-import math
 import calendar
 
 
