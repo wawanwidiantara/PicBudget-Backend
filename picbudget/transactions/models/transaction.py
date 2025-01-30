@@ -22,7 +22,7 @@ class Transaction(models.Model):
         "wallets.Wallet", on_delete=models.CASCADE, null=True, blank=True, default=None
     )
     type = models.CharField(max_length=10, choices=TRANSACTION_TYPE, default="expense")
-    amount = models.DecimalField(decimal_places=2)
+    amount = models.DecimalField(max_digits=16, decimal_places=2)
     transaction_date = models.DateTimeField()
     location = models.CharField(max_length=255, blank=True, null=True)
     labels = models.ManyToManyField(

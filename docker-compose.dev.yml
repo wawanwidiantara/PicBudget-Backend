@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command:
+      - ./run-django.sh
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - .:/opt/project  # Bind mount the whole project for live changes
+      - /var/www/media:/opt/project/media  # Keep media volume separate
+    environment:
+      PICBUDGET_SETTING_LOCAL_SETTINGS_PATH: 'local/settings.dev.py'
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ./run-celery.sh
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+    volumes:
+      - .:/opt/project  # Bind mount the code for live changes
+
+volumes:
+  postgresql_data:
+    driver: local
+  redis_data:
+    driver: local
