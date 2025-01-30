@@ -33,7 +33,7 @@ test:
 .PHONY: up-dependencies-only
 up-dependencies-only:
 	test -f .env || touch .env
-	sudo docker compose -f docker-compose.dev.yml up -d
+	sudo docker compose -f docker-compose.dev.yml up
 
 .PHONY: update
 update: install migrate;
